@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/moto_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -100,31 +99,33 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          motoProvider.vehiculo != null 
-                              ? '${motoProvider.vehiculo!.marca} ${motoProvider.vehiculo!.modelo}'
-                              : 'Cargando vehículo...',
-                          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Placa: ${motoProvider.vehiculo?.placa ?? '---'}',
-                          style: const TextStyle(color: Colors.grey, fontSize: 14),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          motoProvider.isIgnitionOn ? 'Estado: Encendido' : 'Estado: Apagado',
-                          style: TextStyle(
-                            color: motoProvider.isIgnitionOn ? Colors.green : Colors.red,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            motoProvider.vehiculo != null 
+                                ? '${motoProvider.vehiculo!.marca} ${motoProvider.vehiculo!.modelo}'
+                                : 'Cargando vehículo...',
+                            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          Text(
+                            'Placa: ${motoProvider.vehiculo?.placa ?? '---'}',
+                            style: const TextStyle(color: Colors.grey, fontSize: 14),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            motoProvider.isIgnitionOn ? 'Estado: Encendido' : 'Estado: Apagado',
+                            style: TextStyle(
+                              color: motoProvider.isIgnitionOn ? Colors.green : Colors.red,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     Switch(
                       value: motoProvider.isIgnitionOn,

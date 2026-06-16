@@ -20,20 +20,44 @@ class MotoProvider extends ChangeNotifier {
 
   RealtimeChannel? _telemetriaSubscription;
 
-  Future<void> loadVehiculoData(String idUsuario) async {
+  Future<void> loadVehiculoData(dynamic idUsuario) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final response = await _supabase
-          .from('vehiculo')
-          .select()
-          .eq('id_usuario', idUsuario)
-          .maybeSingle();
+      final intIdUsuario = int.tryParse(idUsuario.toString());
 
-      if (response != null) {
-        _vehiculo = VehiculoModel.fromMap(response);
-        _isIgnitionOn = response['is_ignited'] ?? false;
+      if (intIdUsuario != null) {
+        final response = await _supabase
+            .from('vehiculo')
+            .select()
+            .eq('id_usuario', intIdUsuario)
+            .maybeSingle();
+
+        if (response != null) {
+          _vehiculo = VehiculoModel.fromMap(response);
+          _isIgnitionOn = response['is_ignited'] ?? false;
+        }
+      } else {
+        final userResponse = await _supabase
+            .from('usuario')
+            .select('id_usuario')
+            .eq('correo_electronico', idUsuario.toString())
+            .maybeSingle();
+
+        if (userResponse != null) {
+          final dbId = int.parse(userResponse['id_usuario'].toString());
+          final response = await _supabase
+              .from('vehiculo')
+              .select()
+              .eq('id_usuario', dbId)
+              .maybeSingle();
+
+          if (response != null) {
+            _vehiculo = VehiculoModel.fromMap(response);
+            _isIgnitionOn = response['is_ignited'] ?? false;
+          }
+        }
       }
     } catch (e) {
       debugPrint('Error cargando vehículo: $e');
@@ -78,10 +102,11 @@ class MotoProvider extends ChangeNotifier {
     _isIgnitionOn = newState;
     notifyListeners(); 
     try {
+      final intIdVehiculo = int.tryParse(motoId) ?? 1;
       await _supabase
           .from('vehiculo') 
           .update({'is_ignited': newState}) 
-          .eq('id_vehiculo', motoId);
+          .eq('id_vehiculo', intIdVehiculo);
     } catch (e) {
       _isIgnitionOn = !newState;
       notifyListeners();

@@ -3,8 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/moto_provider.dart';
+import 'providers/alerts_provider.dart';
 import 'ui/screens/login_screen.dart';
-import 'ui/screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +12,7 @@ void main() async {
   await Supabase.initialize(
     url: 'https://zphrnqdxgjuttyzddsuq.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpwaHJucWR4Z2p1dHR5emRkc3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1MTQ0NTEsImV4cCI6MjA5MzA5MDQ1MX0.MmwS5_8Mjx2IJcc-nlAkBS4cyvGlObANnagAC0qTGfE',
+    authOptions: const FlutterAuthClientOptions(authFlowType: AuthFlowType.pkce),
   );
 
   runApp(const MyApp());
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => MotoProvider()),
+        ChangeNotifierProvider(create: (_) => AlertsProvider()),
       ],
       child: MaterialApp(
         title: 'V-LINK App',
@@ -34,7 +36,7 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           useMaterial3: true,
         ),
-        home: const LoginScreen(), // Arrancamos en la pantalla de Login
+        home: const LoginScreen(),
       ),
     );
   }
