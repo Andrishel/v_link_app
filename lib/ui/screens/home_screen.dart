@@ -21,7 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<MotoProvider>(context, listen: false).listenToMotoChanges(_mockMotoId);
+      Provider.of<MotoProvider>(context, listen: false).listenToTelemetria(1);
     });
   }
 
@@ -128,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
           if (motoProvider.isLoading)
             Container(
               color: Colors.black26,
-              child: Center(
+              child: const Center(
                 child: CircularProgressIndicator(color: Colors.blueAccent),
               ),
             ),

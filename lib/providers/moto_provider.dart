@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:latlong2/latlong.dart';
+import '../data/models/vehiculo_model.dart';
 
 class MotoProvider extends ChangeNotifier {
   final SupabaseClient _supabase = Supabase.instance.client;
+
+  VehiculoModel? _vehiculo;
+  VehiculoModel? get vehiculo => _vehiculo;
 
   bool _isIgnitionOn = false;
   bool get isIgnitionOn => _isIgnitionOn;
@@ -14,56 +18,60 @@ class MotoProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  RealtimeChannel? _motoSubscription;
+  RealtimeChannel? _telemetriaSubscription;
 
-  void listenToMotoChanges(String motoId) {
+  Future<void> loadVehiculoData(String idUsuario) async {
     _isLoading = true;
     notifyListeners();
 
-    _fetchInitialState(motoId);
+    try {
+      final response = await _supabase
+          .from('vehiculo')
+          .select()
+          .eq('id_usuario', idUsuario)
+          .maybeSingle();
 
-    if (_motoSubscription != null) {
-      _supabase.removeChannel(_motoSubscription!);
+      if (response != null) {
+        _vehiculo = VehiculoModel.fromMap(response);
+        _isIgnitionOn = response['is_ignited'] ?? false;
+      }
+    } catch (e) {
+      debugPrint('Error cargando vehículo: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void listenToTelemetria(int idRutaActiva) {
+    if (_telemetriaSubscription != null) {
+      _supabase.removeChannel(_telemetriaSubscription!);
     }
 
-    _motoSubscription = _supabase
-        .channel('public:punto_telemetria')
+    _telemetriaSubscription = _supabase
+        .channel('public:punto_telemetria:id_ruta=eq.$idRutaActiva')
         .onPostgresChanges(
-          event: PostgresChangeEvent.all,
+          event: PostgresChangeEvent.insert,
           schema: 'public',
           table: 'punto_telemetria',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'id_ruta',
+            value: idRutaActiva,
+          ),
           callback: (payload) {
             final data = payload.newRecord;
-            
             if (data['latitud'] != null && data['longitud'] != null) {
               _currentLocation = LatLng(
                 double.parse(data['latitud'].toString()),
                 double.parse(data['longitud'].toString()),
               );
-              notifyListeners(); 
+              notifyListeners();
             }
           },
         );
 
-    _motoSubscription?.subscribe();
-  }
-
-  Future<void> _fetchInitialState(String motoId) async {
-    try {
-      final data = await _supabase
-          .from('vehiculo') 
-          .select()
-          .eq('id_vehiculo', motoId) 
-          .single();
-
-      _isIgnitionOn = data['is_ignited'] ?? false; 
-      
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _isLoading = false;
-      notifyListeners();
-    }
+    _telemetriaSubscription?.subscribe();
   }
 
   Future<void> toggleIgnition(String motoId, bool newState) async {
@@ -77,13 +85,14 @@ class MotoProvider extends ChangeNotifier {
     } catch (e) {
       _isIgnitionOn = !newState;
       notifyListeners();
+      debugPrint('Error al cambiar encendido: $e');
     }
   }
 
   @override
   void dispose() {
-    if (_motoSubscription != null) {
-      _supabase.removeChannel(_motoSubscription!);
+    if (_telemetriaSubscription != null) {
+      _supabase.removeChannel(_telemetriaSubscription!);
     }
     super.dispose();
   }
