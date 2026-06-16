@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/moto_provider.dart';
 import '../../providers/auth_provider.dart';
 import 'login_screen.dart';
@@ -14,14 +15,22 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final String _mockMotoId = "1"; 
   final MapController _mapController = MapController();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<MotoProvider>(context, listen: false).listenToTelemetria(1);
+      final motoProv = Provider.of<MotoProvider>(context, listen: false);
+      final user = Supabase.instance.client.auth.currentUser;
+
+      if (user != null) {
+        motoProv.loadVehiculoData(user.id);
+      } else {
+        motoProv.loadVehiculoData("3");
+      }
+
+      motoProv.listenToTelemetria(1);
     });
   }
 
@@ -83,11 +92,11 @@ class _HomeScreenState extends State<HomeScreen> {
             left: 24,
             right: 24,
             child: Card(
-              color: const Color(0xFF1E1E2E),
+              color: const Color(0xFF1E1E2E).withOpacity(0.95),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               elevation: 4,
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(20.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -95,17 +104,24 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text(
-                          'Estado del Vehículo',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                        Text(
+                          motoProvider.vehiculo != null 
+                              ? '${motoProvider.vehiculo!.marca} ${motoProvider.vehiculo!.modelo}'
+                              : 'Cargando vehículo...',
+                          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          motoProvider.isIgnitionOn ? 'Encendido' : 'Apagado',
+                          'Placa: ${motoProvider.vehiculo?.placa ?? '---'}',
+                          style: const TextStyle(color: Colors.grey, fontSize: 14),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          motoProvider.isIgnitionOn ? 'Estado: Encendido' : 'Estado: Apagado',
                           style: TextStyle(
                             color: motoProvider.isIgnitionOn ? Colors.green : Colors.red,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
@@ -117,7 +133,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       onChanged: motoProvider.isLoading
                           ? null
                           : (value) async {
-                              await motoProvider.toggleIgnition(_mockMotoId, value);
+                              final motoId = motoProvider.vehiculo?.idVehiculo.toString() ?? '1';
+                              await motoProvider.toggleIgnition(motoId, value);
                             },
                     ),
                   ],

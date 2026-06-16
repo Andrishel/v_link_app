@@ -7,10 +7,12 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  // Función para iniciar sesión con Email y Contraseña
-  Future<bool> login(String email, String password) async {
+  String? _userRole;
+  String? get userRole => _userRole;
+
+  Future<String?> login(String email, String password) async {
     _isLoading = true;
-    notifyListeners(); // Notifica a la interfaz para que muestre un spinner de carga
+    notifyListeners();
 
     try {
       final response = await _supabase.auth.signInWithPassword(
@@ -18,20 +20,35 @@ class AuthProvider extends ChangeNotifier {
         password: password,
       );
       
+      if (response.user == null) throw Exception("Usuario no encontrado");
+
+      final userData = await _supabase
+          .from('usuario')
+          .select('rol')
+          .eq('correo_electronico', response.user!.email!)
+          .maybeSingle();
+
+      if (userData != null) {
+        _userRole = userData['rol'].toString();
+      } else {
+        _userRole = 'usuario';
+      }
+
       _isLoading = false;
       notifyListeners();
+      return _userRole;
       
-      // Si el usuario existe y se autenticó correctamente, retorna true
-      return response.user != null;
     } catch (e) {
       _isLoading = false;
+      _userRole = null;
       notifyListeners();
-      return false; // Error en credenciales o conexión
+      return null;
     }
   }
 
-  // Función para cerrar sesión
   Future<void> logout() async {
+    _userRole = null;
     await _supabase.auth.signOut();
+    notifyListeners();
   }
 }

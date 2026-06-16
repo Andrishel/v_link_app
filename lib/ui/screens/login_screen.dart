@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import 'home_screen.dart';
+import 'admin_dashboard_screen.dart';
+import 'supervisor_dashboard_screen.dart';
+import 'tecnico_dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,7 +16,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>(); // Para validar que los campos no estén vacíos
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
@@ -26,20 +29,43 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       
-      final success = await authProvider.login(
+      final role = await authProvider.login(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
 
-      if (success && mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        );
+      if (role != null && mounted) {
+        switch (role.toLowerCase()) {
+          case 'admin':
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+            );
+            break;
+          case 'supervisor':
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const SupervisorDashboardScreen()),
+            );
+            break;
+          case 'tecnico':
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const TecnicoDashboardScreen()),
+            );
+            break;
+          case 'usuario':
+          default:
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const HomeScreen()),
+            );
+            break;
+        }
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Credenciales incorrectas. Inténtalo de nuevo.'),
+            content: Text('Error de autenticación o rol no asignado.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -62,7 +88,6 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // LOGO / ICONO TEMPORAL
                 const Icon(
                   Icons.vpn_key_rounded,
                   size: 80,
@@ -85,8 +110,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 const SizedBox(height: 48),
-
-                // INPUT DE CORREO ELECTRÓNICO
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -112,8 +135,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-
-                // INPUT DE CONTRASEÑA
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
@@ -139,8 +160,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ),
                 const SizedBox(height: 32),
-
-                // BOTÓN DE ACCESO CONDICIONAL
                 authProvider.isLoading
                     ? const Center(child: CircularProgressIndicator(color: Colors.blueAccent))
                     : ElevatedButton(

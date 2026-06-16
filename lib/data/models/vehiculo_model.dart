@@ -1,12 +1,13 @@
 class VehiculoModel {
-  final String idVehiculo;
-  final String idUsuario;
+  final int idVehiculo;
+  final int idUsuario;
   final String marca;
   final String modelo;
   final String placa;
-  final String cilindraje;
+  final double cilindraje;
   final int anio;
   final String color;
+  final bool isIgnited;
 
   VehiculoModel({
     required this.idVehiculo,
@@ -17,18 +18,20 @@ class VehiculoModel {
     required this.cilindraje,
     required this.anio,
     required this.color,
+    required this.isIgnited,
   });
 
   factory VehiculoModel.fromMap(Map<String, dynamic> map) {
     return VehiculoModel(
-      idVehiculo: map['id_vehiculo'].toString(),
-      idUsuario: map['id_usuario'].toString(),
-      marca: map['marca'] ?? 'Sin Marca',
-      modelo: map['modelo'] ?? 'Sin Modelo',
-      placa: map['placa'] ?? '---',
-      cilindraje: map['cilindraje'] ?? '',
+      idVehiculo: map['id_vehiculo'] ?? 0,
+      idUsuario: map['id_usuario'] ?? 0,
+      marca: map['marca'] ?? '',
+      modelo: map['modelo'] ?? '',
+      placa: map['placa'] ?? '',
+      cilindraje: double.parse((map['cilindraje'] ?? 0.0).toString()),
       anio: map['anio'] ?? 0,
       color: map['color'] ?? '',
+      isIgnited: map['is_ignited'] ?? false,
     );
   }
 }

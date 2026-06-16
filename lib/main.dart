@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           useMaterial3: true,
         ),
-        home: const HomeScreen(), // Arrancamos en la pantalla de Login
+        home: const LoginScreen(), // Arrancamos en la pantalla de Login
       ),
     );
   }
