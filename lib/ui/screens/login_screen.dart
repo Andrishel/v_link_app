@@ -34,7 +34,17 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text.trim(),
       );
 
-      if (role != null && mounted) {
+          if (role != null && mounted) {
+            if (role.startsWith('error_')) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error de base de datos: $role'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+              return;
+            }
+
         switch (role.toLowerCase()) {
           case 'admin':
             Navigator.pushReplacement(
@@ -55,10 +65,17 @@ class _LoginScreenState extends State<LoginScreen> {
             );
             break;
           case 'usuario':
-          default:
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => const HomeScreen()),
+            );
+            break;
+          default:
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Rol inesperado recibido: $role'),
+                backgroundColor: Colors.purple,
+              ),
             );
             break;
         }

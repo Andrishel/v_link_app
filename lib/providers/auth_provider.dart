@@ -21,6 +21,7 @@ class AuthProvider extends ChangeNotifier {
       );
       
       if (response.user == null) throw Exception("Usuario no encontrado");
+      print("DEBUG: Autenticación exitosa. Email en Auth: ${response.user!.email}");
 
       final userData = await _supabase
           .from('usuario')
@@ -28,17 +29,22 @@ class AuthProvider extends ChangeNotifier {
           .eq('correo_electronico', response.user!.email!)
           .maybeSingle();
 
+      print("DEBUG: Resultado de la consulta en tabla pública: $userData");
+
       if (userData != null) {
         _userRole = userData['rol'].toString();
       } else {
+        print("DEBUG: No se encontró registro o RLS bloqueó la fila. Asignando rol por defecto.");
         _userRole = 'usuario';
       }
 
       _isLoading = false;
       notifyListeners();
+      print("DEBUG: Rol final retornado: $_userRole");
       return _userRole;
       
     } catch (e) {
+      print("DEBUG: Cayó en el bloque CATCH. Error real: $e");
       _isLoading = false;
       _userRole = null;
       notifyListeners();
